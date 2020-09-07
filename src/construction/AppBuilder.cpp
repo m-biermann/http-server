@@ -6,22 +6,16 @@
 
 namespace mabiphmo::httpServer::construction{
 
-	iocServer::construction::IAppBuilder &AppBuilder::BaseBuilder() {
+	portServer::construction::IAppBuilder &AppBuilder::BaseBuilder() {
 		return baseBuilder_;
 	}
 
-	AppBuilder::AppBuilder(iocServer::construction::IAppBuilder &baseBuilder) : baseBuilder_(baseBuilder) {}
+	AppBuilder::AppBuilder(portServer::construction::IAppBuilder &baseBuilder) : baseBuilder_(baseBuilder) {}
 
 	IAppBuilder &AppBuilder::WithClearText(unsigned int portNr, boost::asio::ip::address &&address) {
 		//TODO
 		(void)portNr;
 		(void)address;
-		return *this;
-	}
-
-	IAppBuilder &AppBuilder::WithThreadCount(unsigned int threadCount) {
-		//TODO
-		(void)threadCount;
 		return *this;
 	}
 
@@ -32,12 +26,6 @@ namespace mabiphmo::httpServer::construction{
 		(void)privateKeyPath;
 		(void)portNr;
 		(void)address;
-		return *this;
-	}
-
-	IAppBuilder &AppBuilder::WithHostname(std::string &&hostname) {
-		//TODO
-		(void)hostname;
 		return *this;
 	}
 }

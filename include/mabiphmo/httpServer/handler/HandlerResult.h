@@ -16,7 +16,7 @@ namespace mabiphmo::httpServer::handler{
 		std::function<void()> sendLambda_;
 	public:
 		template<class Body>
-		HandlerResult(ISender &sender, boost::beast::http::response<Body> &&message) : data_(std::static_pointer_cast<void>(std::make_shared<boost::beast::http::response<Body>>(message)))
+		HandlerResult(ISender &sender, boost::beast::http::response<Body> &&message) : data_(std::make_shared<boost::beast::http::response<Body>>(message))
 		{
 			try{
 				auto& typedSender = dynamic_cast<Sender<boost::beast::tcp_stream>&>(sender);
