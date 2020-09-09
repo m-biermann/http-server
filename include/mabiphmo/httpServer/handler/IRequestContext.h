@@ -19,8 +19,8 @@ namespace mabiphmo::httpServer::handler{
 
 		virtual boost::beast::http::request_parser<boost::beast::http::empty_body> &RequestParser() = 0;
 
-		virtual void StoreLayerContext(IHandlerContext *data, std::string &location) = 0;
-		virtual std::shared_ptr<IHandlerContext> LoadLayerContext(std::string &location) = 0;
+		virtual void StoreLayerContext(std::shared_ptr<IHandlerContext> data, const std::string &location) = 0;
+		virtual std::shared_ptr<IHandlerContext> LoadLayerContext(const std::string &location) = 0;
 	};
 }
 
