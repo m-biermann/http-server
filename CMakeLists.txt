@@ -8,7 +8,7 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
-add_library(httpServer src/main.cpp src/construction/AppBuilder.cpp src/construction/AppBuilder.h src/session/HttpsSession.cpp src/session/HttpsSession.h src/session/HttpSession.cpp src/session/HttpSession.h src/handler/HandlerStack.cpp src/handler/HandlerStack.h src/session/launcher/HttpSessionLauncher.cpp src/session/launcher/HttpSessionLauncher.h src/session/launcher/HttpsSessionLauncher.cpp src/session/launcher/HttpsSessionLauncher.h)
+add_library(httpServer src/main.cpp src/construction/AppBuilder.cpp src/construction/AppBuilder.h src/session/HttpsSession.cpp src/session/HttpsSession.h src/session/HttpSession.cpp src/session/HttpSession.h src/session/launcher/HttpSessionLauncher.cpp src/session/launcher/HttpSessionLauncher.h src/session/launcher/HttpsSessionLauncher.cpp src/session/launcher/HttpsSessionLauncher.h)
 
 target_include_directories(httpServer PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> PUBLIC ${Boost_INCLUDE_DIR})
