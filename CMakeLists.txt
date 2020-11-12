@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
+project(http-server)
 
 set(CMAKE_CXX_STANDARD 17)
+
+set(INSTALL_${PROJECT_NAME} ON)
 
 if(MSVC)
     add_compile_options(/W4 /WX)
@@ -8,21 +11,96 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
-add_library(httpServer src/main.cpp src/construction/AppBuilder.cpp src/construction/AppBuilder.h src/session/HttpsSession.cpp src/session/HttpsSession.h src/session/HttpSession.cpp src/session/HttpSession.h src/session/launcher/HttpSessionLauncher.cpp src/session/launcher/HttpSessionLauncher.h src/session/launcher/HttpsSessionLauncher.cpp src/session/launcher/HttpsSessionLauncher.h)
+include(GNUInstallDirs)
 
-target_include_directories(httpServer PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+if(DEFINED ENV{CMAKE_INSTALL_PREFIX})
+    set(CMAKE_INSTALL_PREFIX $ENV{CMAKE_INSTALL_PREFIX})
+endif()
+
+if(DEFINED ENV{BOOST_ROOT})
+    set(BOOST_ROOT $ENV{BOOST_ROOT})
+endif()
+
+if(DEFINED ENV{Boost_DEBUG})
+    set(Boost_DEBUG $ENV{Boost_DEBUG})
+endif()
+
+if(NOT DEFINED PACKAGE_NAME)
+    message(STATUS "Searching for ioc-container")
+    find_package(ioc-container REQUIRED)
+    message(STATUS "Searching for ioc-server")
+    find_package(ioc-server REQUIRED)
+    message(STATUS "Searching for port-server")
+    find_package(port-server REQUIRED)
+endif()
+
+find_package(Boost REQUIRED)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+add_library(${PROJECT_NAME} src/main.cpp src/construction/AppBuilder.cpp src/construction/AppBuilder.h src/session/HttpsSession.cpp src/session/HttpsSession.h src/session/HttpSession.cpp src/session/HttpSession.h src/session/launcher/HttpSessionLauncher.cpp src/session/launcher/HttpSessionLauncher.h src/session/launcher/HttpsSessionLauncher.cpp src/session/launcher/HttpsSessionLauncher.h)
+
+target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}> PUBLIC ${Boost_INCLUDE_DIR})
 
-target_link_libraries(httpServer PUBLIC ${PROJECT_NAME}::portServer)
+if(DEFINED PACKAGE_NAME)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${PACKAGE_NAME}::port-server)
+else()
+    target_link_libraries(${PROJECT_NAME} PUBLIC port-server::port-server)
+endif()
 
-add_library(${PROJECT_NAME}::httpServer ALIAS httpServer)
+if(DEFINED PACKAGE_NAME)
+    message(STATUS "Exporting target to ${PACKAGE_NAME}Targets")
 
-add_subdirectory(test)
+    add_library(${PACKAGE_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-include(GNUInstallDirs)
-install(TARGETS httpServer
-        EXPORT ${PROJECT_NAME}Targets
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}
+    install(TARGETS ${PACKAGE_NAME}::${PROJECT_NAME}
+            EXPORT ${PACKAGE_NAME}Targets)
+
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mabiphmo TYPE INCLUDE)
+else()
+    if(${INSTALL_${PROJECT_NAME}})
+        message(STATUS "Installing StandAlone")
+
+        install(TARGETS ${PROJECT_NAME}
+                EXPORT ${PROJECT_NAME}Targets
+                LIBRARY DESTINATION lib COMPONENT Runtime
+                ARCHIVE DESTINATION lib COMPONENT Development
+                RUNTIME DESTINATION bin COMPONENT Runtime
+                PUBLIC_HEADER DESTINATION include COMPONENT Development
+                BUNDLE DESTINATION bin COMPONENT Runtime)
+
+        include(CMakePackageConfigHelpers)
+        configure_package_config_file(
+                "${PROJECT_NAME}Config.cmake.in"
+                "${PROJECT_NAME}Config.cmake"
+                INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+                PATH_VARS
+                CMAKE_INSTALL_LIBDIR
         )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mabiphmo TYPE INCLUDE)
+        write_basic_package_version_file(
+                ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+                VERSION 1.0.0
+                COMPATIBILITY SameMajorVersion
+        )
+
+        install(EXPORT ${PROJECT_NAME}Targets
+                FILE ${PROJECT_NAME}Targets.cmake
+                NAMESPACE ${PROJECT_NAME}::
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+
+        install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+                DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME})
+
+        install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/mabiphmo TYPE INCLUDE)
+    else()
+        message(STATUS "Not installing")
+    endif()
+endif()
+
+enable_testing()
+
+add_subdirectory(test)
